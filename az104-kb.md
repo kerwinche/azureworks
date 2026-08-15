@@ -1,4 +1,4 @@
-# AZ-104 知識庫（已校閲）
+# AZ-104 知識庫（已校閱）
 
 技能來源：Microsoft Learn 學習指南，技能衡量日期為 2026 年 4 月 17 日。
 https://learn.microsoft.com/en-us/credentials/certifications/resources/study-guides/az-104
@@ -118,7 +118,7 @@ retentionDays ∈ {7, 30, 90, 180}。RPO 顯示為「每日」（假設）。保
 
 僅指示：建築尺寸、區名、旁白裡任何不在面板上的數字。
 
-## 校閲（第二遍）
+## 校閱（第二遍）
 
 已修正／盯住：
 1. 不要畫成「訂用帳戶包含租用戶」。
@@ -128,7 +128,7 @@ retentionDays ∈ {7, 30, 90, 180}。RPO 顯示為「每日」（假設）。保
 5. 不要把 ACR 當成運算執行階段。
 6. 不要把服務端點等同 Private Endpoint。
 7. 不要宣稱 Azure 價格是即時的——那是一小張費率表。
-8. 不要宣稱結果沒有幻覺。校閲降低了錯誤率。
+8. 不要宣稱結果沒有幻覺。校閱降低了錯誤率。
 9. 刻意不在範圍內（關於裡點名，不成站）：SSPR、外部使用者、授權、物件複寫、主機加密深探、UDR 表、Application Gateway 對 LB 完整比較、KQL 查詢。
 10. 運算類型滑桿是誠實涵蓋 VM + ACA + App Service 的方式，不必做三座城。
 
