@@ -53,10 +53,10 @@
   var SIZE_PLAN = { B1s: 1, B2s: 2, D2s_v5: 2, D4s_v5: 4 };
 
   var REDUNDANCY = {
-    LRS:  { copies: 3, zones: 1, regions: 1, datacenters: 1, mult: 1.0,  note: '\u4e09\u4efd\uff0c1 \u500b\u8cc7\u6599\u4e2d\u5fc3\uff0c1 \u500b\u5340\u57df' },
-    ZRS:  { copies: 3, zones: 3, regions: 1, datacenters: 3, mult: 1.2,  note: '\u4e09\u4efd\uff0c3 \u500b\u53ef\u7528\u6027\u5340\u57df\uff0c1 \u500b\u5340\u57df' },
-    GRS:  { copies: 6, zones: 1, regions: 2, datacenters: 2, mult: 2.0,  note: '6 \u4efd\uff1a\u672c\u5340 LRS + \u914d\u5c0d\u5340\u57df LRS' },
-    GZRS: { copies: 6, zones: 3, regions: 2, datacenters: 4, mult: 2.2,  note: '6 \u4efd\uff1a3 \u500b\u53ef\u7528\u6027\u5340\u57df + \u914d\u5c0d\u5340\u57df LRS' }
+    LRS:  { copies: 3, zones: 1, regions: 1, datacenters: 1, mult: 1.0,  note: '3 份，1 個資料中心，1 個區域' },
+    ZRS:  { copies: 3, zones: 3, regions: 1, datacenters: 3, mult: 1.2,  note: '3 份，3 個可用性區域，1 個區域' },
+    GRS:  { copies: 6, zones: 1, regions: 2, datacenters: 2, mult: 2.0,  note: '6 份：本區 LRS + 配對區域 LRS' },
+    GZRS: { copies: 6, zones: 3, regions: 2, datacenters: 4, mult: 2.2,  note: '6 份：3 個可用性區域 + 配對區域 LRS' }
   };
 
   var RETENTIONS = [7, 30, 90, 180];
@@ -119,15 +119,15 @@
     var i, key;
     for (i = 0; i < REQUIRED_TAGS.length; i++) {
       key = REQUIRED_TAGS[i];
-      if (!tags || !tags[key]) denies.push('\u7f3a\u5c11\u5fc5\u8981\u6a19\u7c64\uff1a' + key);
+      if (!tags || !tags[key]) denies.push('缺少必要標籤：' + key);
     }
 
     if (pack === 'full') {
       if (ALLOWED_LOCATIONS.indexOf(location) < 0) {
-        denies.push('\u4f4d\u7f6e ' + location + ' \u4e0d\u5728\u5141\u8a31\u6e05\u55ae');
+        denies.push('位置 ' + location + ' 不在允許清單');
       }
       if (ALLOWED_SKUS.indexOf(sku) < 0) {
-        denies.push('SKU ' + sku + ' \u4e0d\u5728\u5141\u8a31\u6e05\u55ae');
+        denies.push('SKU ' + sku + ' 不在允許清單');
       }
     }
     return denies;
@@ -160,13 +160,13 @@
         protocol: hits[0].protocol,
         port: hits[0].port,
         source: hits[0].source,
-        note: '\u512a\u5148\u9806\u5e8f ' + hits[0].priority + ' ' + (hits[0].access === 'Allow' ? '\u5141\u8a31' : '\u62d2\u7d55')
+        note: '優先順序 ' + hits[0].priority + ' ' + (hits[0].access === 'Allow' ? '允許' : '拒絕')
       };
     }
     if (direction === 'inbound') {
-      return { priority: 65500, access: 'Deny', protocol: '*', port: '*', source: '*', note: '\u9810\u8a2d\u8f38\u5165\u62d2\u7d55' };
+      return { priority: 65500, access: 'Deny', protocol: '*', port: '*', source: '*', note: '預設輸入拒絕' };
     }
-    return { priority: 65500, access: 'Allow', protocol: '*', port: '*', source: '*', note: '\u9810\u8a2d\u8f38\u51fa\u5141\u8a31' };
+    return { priority: 65500, access: 'Allow', protocol: '*', port: '*', source: '*', note: '預設輸出允許' };
   }
 
   function nsgRulesFor(path) {
@@ -290,45 +290,45 @@
     var accessKind = p.accessPath === 'public' ? 'key' : (p.accessPath === 'bastion' ? 'sas' : 'identity');
 
     var roleNote = {
-      Reader: '\u8b80\u53d6\u8005', Contributor: '\u53c3\u8207\u8005', Owner: '\u64c1\u6709\u8005',
-      'User Access Administrator': '\u4f7f\u7528\u8005\u5b58\u53d6\u7cfb\u7d71\u7ba1\u7406\u54e1',
-      'Virtual Machine Contributor': '\u865b\u64ec\u6a5f\u5668\u53c3\u8207\u8005',
-      'Storage Blob Data Contributor': '\u5132\u5b58\u9ad4 Blob \u8cc7\u6599\u53c3\u8207\u8005'
+      Reader: '讀取者', Contributor: '參與者', Owner: '擁有者',
+      'User Access Administrator': '使用者存取系統管理員',
+      'Virtual Machine Contributor': '虛擬機器參與者',
+      'Storage Blob Data Contributor': '儲存體 Blob 資料參與者'
     };
-    var scopeNote = { mg: '\u7ba1\u7406\u7fa4\u7d44', sub: '\u8a02\u7528\u5e33\u6236', rg: '\u8cc7\u6e90\u7fa4\u7d44', resource: '\u8cc7\u6e90' };
-    var pathNote = { public: '\u516c\u7528', bastion: 'Bastion', pe: 'Private Endpoint' };
+    var scopeNote = { mg: '管理群組', sub: '訂用帳戶', rg: '資源群組', resource: '資源' };
+    var pathNote = { public: '公用', bastion: 'Bastion', pe: 'Private Endpoint' };
     var typeNote = { vm: 'VM', aca: 'Container Apps', app: 'App Service' };
-    var lockNote = { none: '\u7121\u9396\u5b9a', CanNotDelete: '\u7121\u6cd5\u522a\u9664', ReadOnly: '\u552f\u8b80' };
+    var lockNote = { none: '無鎖定', CanNotDelete: '無法刪除', ReadOnly: '唯讀' };
     var vaultNote = { rsv: 'RSV', abv: 'Backup vault' };
 
     var denyReason = null;
     var status = 'running';
     if (!rbacOk) {
       status = 'denied';
-      denyReason = 'RBAC\uff1a' + (roleNote[p.role] || p.role) + ' \u5728' +
-        (scopeNote[p.scope] || p.scope) + '\u4e0a\u6c92\u6709' +
-        (p.computeType === 'vm' ? '\u5beb\u5165\u6216\u5beb\u5165 VM' : '\u5beb\u5165') +
-        '\uff0c\u7121\u6cd5\u90e8\u7f72 ' + (typeNote[p.computeType] || p.computeType);
+      denyReason = 'RBAC：' + (roleNote[p.role] || p.role) + ' 在' +
+        (scopeNote[p.scope] || p.scope) + '上沒有' +
+        (p.computeType === 'vm' ? '寫入或寫入 VM' : '寫入') +
+        '，無法部署 ' + (typeNote[p.computeType] || p.computeType);
     } else if (!policyOk) {
       status = 'denied';
-      denyReason = '\u539f\u5247\uff1a' + policyDenies.join('\uff1b');
+      denyReason = '原則：' + policyDenies.join('；');
     } else if (lockBlocksWrite) {
       status = 'denied';
-      denyReason = '\u9396\u5b9a\uff1a\u552f\u8b80\u5373\u4f7f\u5c0d\u64c1\u6709\u8005\u4e5f\u6703\u64cb\u4f4f\u5efa\u7acb\uff0f\u66f4\u65b0';
+      denyReason = '鎖定：唯讀即使對擁有者也會擋住建立／更新';
     }
 
     var rejectAfterPolicy = !rbacOk || !policyOk;
     var phases = [
-      { id: 'entra',   label: 'Entra \u6b0a\u6756',     ok: true,     note: '\u5df2\u7d81\u5b9a\u4f7f\u7528\u8005\u8207\u7fa4\u7d44\uff1b\u6b0a\u6756\u6a19\u70ba\u6709\u6548\uff08\u5047\u8a2d\uff0c\u7121 OIDC\uff09' },
-      { id: 'rbac',    label: 'RBAC \u806f\u96c6',      ok: rbacOk,   note: fmtActions(actions) },
-      { id: 'policy',  label: '\u539f\u5247\u8a55\u4f30',       ok: policyOk, note: policyOk ? (p.policyPack === 'off' ? '\u7d44\u5408\u95dc\u9589\uff1a\u7121\u62d2\u7d55' : '\u6a19\u7c64\uff0f\u4f4d\u7f6e\uff0fSKU \u5141\u8a31') : policyDenies.join('\uff1b') },
-      { id: 'lock',    label: '\u6a19\u7c64\u8207\u9396\u5b9a',     ok: !lockBlocksWrite, note: lockNote[p.lock] || p.lock },
-      { id: 'vnet',    label: 'NSG \u5148\u7b26\u5408\u8005\u52dd', ok: nsg443.access === 'Allow', note: '\u7ba1\u7406 443 \u4f86\u81ea ' + ({ Internet: '\u7db2\u969b\u7db2\u8def', AzureBastion: 'Azure Bastion', VirtualNetwork: '\u865b\u64ec\u7db2\u8def' }[src] || src) + ' \u2192 ' + (nsg443.access === 'Allow' ? '\u5141\u8a31' : '\u62d2\u7d55') },
-      { id: 'access',  label: '\u5b58\u53d6\u8def\u5f91',       ok: true,     note: pathNote[p.accessPath] || p.accessPath },
-      { id: 'storage', label: '\u5099\u63f4',           ok: true,     note: copies.copies + ' \u4efd\u8907\u672c \u00b7 ' + p.redundancy },
-      { id: 'compute', label: '\u904b\u7b97',           ok: rbacOk && policyOk && !lockBlocksWrite, note: (typeNote[p.computeType] || p.computeType) + ' ' + p.size },
-      { id: 'monitor', label: '\u77ad\u671b\u5854',         ok: true,     note: '\u8a08\u91cf\u958b\u555f\u300130 \u5929\u8a18\u9304\u30011 \u689d\u8b66\u793a' },
-      { id: 'backup',  label: '\u4fdd\u96aa\u5eab',         ok: true,     note: (vaultNote[p.vault] || p.vault) + ' \u00b7 ' + p.retentionDays + ' \u5929 \u00b7 $' + backupUsd.toFixed(2) }
+      { id: 'entra',   label: 'Entra 權杖',     ok: true,     note: '已綁定使用者與群組；權杖標為有效（假設，無 OIDC）' },
+      { id: 'rbac',    label: 'RBAC 聯集',      ok: rbacOk,   note: fmtActions(actions) },
+      { id: 'policy',  label: '原則評估',       ok: policyOk, note: policyOk ? (p.policyPack === 'off' ? '組合關閉：無拒絕' : '標籤／位置／SKU 允許') : policyDenies.join('；') },
+      { id: 'lock',    label: '標籤與鎖定',     ok: !lockBlocksWrite, note: lockNote[p.lock] || p.lock },
+      { id: 'vnet',    label: 'NSG 先符合者勝', ok: nsg443.access === 'Allow', note: '管理 443 來自 ' + ({ Internet: '網際網路', AzureBastion: 'Azure Bastion', VirtualNetwork: '虛擬網路' }[src] || src) + ' → ' + (nsg443.access === 'Allow' ? '允許' : '拒絕') },
+      { id: 'access',  label: '存取路徑',       ok: true,     note: pathNote[p.accessPath] || p.accessPath },
+      { id: 'storage', label: '備援',           ok: true,     note: copies.copies + ' 份複本 · ' + p.redundancy },
+      { id: 'compute', label: '運算',           ok: rbacOk && policyOk && !lockBlocksWrite, note: (typeNote[p.computeType] || p.computeType) + ' ' + p.size },
+      { id: 'monitor', label: '瞭望塔',         ok: true,     note: '計量開啟、30 天記錄、1 條警示' },
+      { id: 'backup',  label: '保險庫',         ok: true,     note: (vaultNote[p.vault] || p.vault) + ' · ' + p.retentionDays + ' 天 · $' + backupUsd.toFixed(2) }
     ];
 
     return {
@@ -381,7 +381,7 @@
         sku: p.size,
         zones: p.computeType === 'vm' ? 1 : 0,
         instances: cost.instances,
-        azNote: '\u53ef\u7528\u6027\u5340\u57df\uff0c\u4e0d\u662f\u53ef\u7528\u6027\u8a2d\u5b9a\u7d44'
+        azNote: '可用性區域，不是可用性設定組'
       },
       monitor: {
         metricsOn: true,
@@ -391,7 +391,7 @@
       backup: {
         vault: p.computeType === 'vm' ? 'rsv' : 'abv',
         retentionDays: p.retentionDays,
-        rpo: '\u6bcf\u65e5',
+        rpo: '每日',
         estimate: backupUsd
       },
       cost: cost,
@@ -493,20 +493,20 @@
   }
 
   function fmtUsd(n) {
-    if (n == null || isNaN(n)) return '\u2014';
+    if (n == null || isNaN(n)) return '—';
     var v = Math.round(n * 100) / 100;
     return (v < 0 ? '-$' : '$') + Math.abs(v).toFixed(2);
   }
 
   var ACTION_LABEL = {
-    read: '\u8b80\u53d6', write: '\u5beb\u5165', 'delete': '\u522a\u9664', assignRole: '\u6307\u6d3e\u89d2\u8272',
-    writeVm: '\u5beb\u5165 VM', deleteVm: '\u522a\u9664 VM',
-    readBlob: '\u8b80\u53d6 Blob', writeBlob: '\u5beb\u5165 Blob', deleteBlob: '\u522a\u9664 Blob'
+    read: '讀取', write: '寫入', 'delete': '刪除', assignRole: '指派角色',
+    writeVm: '寫入 VM', deleteVm: '刪除 VM',
+    readBlob: '讀取 Blob', writeBlob: '寫入 Blob', deleteBlob: '刪除 Blob'
   };
 
   function fmtActions(actions) {
-    if (!actions || !actions.length) return '\uff08\u7121\uff09';
-    return actions.map(function (a) { return ACTION_LABEL[a] || a; }).join('\u3001');
+    if (!actions || !actions.length) return '（無）';
+    return actions.map(function (a) { return ACTION_LABEL[a] || a; }).join('、');
   }
 
   global.Azure = {
